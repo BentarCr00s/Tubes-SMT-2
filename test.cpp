@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 
@@ -153,7 +154,7 @@ int main()
     }
 
     // Merekomendasikan film untuk setiap user
-    for (int userId = 1; userId <= 10; ++userId)
+    for (int userId = 1; userId <= 20; ++userId)
     {
         vector<pair<int, double>> recommendations = recommendMovies(userId, userRatings, ratings, 5);
         cout << "Recommended movies for user " << userId << ":" << endl;
