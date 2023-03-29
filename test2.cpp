@@ -101,16 +101,28 @@ vector<pair<int, double>> recommendMovies(int userId, unordered_map<int, unorder
     }
 
     // Mengurutkan film berdasarkan skor
-    vector<pair<int, double>> recommendations;
+    int n = movieScores.size();
+    int *movieIds = new int[n];
+    double *scores = new double[n];
+    int i = 0;
     for (auto &p : movieScores)
     {
-        int movieId = p.first;
-        double score = p.second;
-        recommendations.push_back({movieId, score});
+        movieIds[i] = p.first;
+        scores[i] = p.second;
+        i++;
     }
-    sort(recommendations.begin(), recommendations.end(), [](const pair<int, double> &p1, const pair<int, double> &p2)
-         { return p1.second > p2.second; });
-    vector<pair<int, double>> topRecs(recommendations.begin(), recommendations.begin() + numRecs);
+    sort(movieIds, movieIds + n, [&](int a, int b)
+         { return scores[a] > scores[b]; });
+    vector<pair<int, double>> topRecs;
+    for (int i = 0; i < numRecs && i < n; i++)
+    {
+        int movieId = movieIds[i];
+        double score = scores[movieId];
+        topRecs.push_back({movieId, score});
+    }
+
+    delete[] movieIds;
+    delete[] scores;
 
     return topRecs;
 }
@@ -146,25 +158,34 @@ int main()
     }
     ratingFile.close();
 
-    // Membuat mapping dari user ke rating
+    // Membuat mapping dari user id ke rating yang diberikan oleh user tersebut
     unordered_map<int, unordered_map<int, double>> userRatings;
-    for (auto &rating : ratings)
+    for (auto &r : ratings)
     {
-        userRatings[rating.userId][rating.movieId] = rating.rating;
+        int userId = r.userId;
+        int movieId = r.movieId;
+        double rating = r.rating;
+        userRatings[userId][movieId] = rating;
     }
 
-    // Merekomendasikan film untuk setiap user
-    for (int userId = 1; userId <= 10; ++userId)
+    // Merekomendasikan film untuk user dengan id 1
+    int startUserId = 1;
+    int endUserId = 10;
+    int numRecs = 4;
+
+    for (int userId = startUserId; userId <= endUserId; userId++)
     {
-        vector<pair<int, double>> recommendations = recommendMovies(userId, userRatings, ratings, 5);
-        cout << "Recommended movies for user " << userId << ":" << endl;
-        for (auto &rec : recommendations)
+        vector<pair<int, double>> topRecs = recommendMovies(userId, userRatings, ratings, numRecs);
+
+        // Menampilkan hasil rekomendasi
+        cout << "Top " << numRecs << " recommended movies for user " << userId << ":" << endl;
+        for (auto &p : topRecs)
         {
-            int movieId = rec.first;
-            double score = rec.second;
-            cout << movies[movieId - 1].title << " (" << movies[movieId - 1].genre << "): " << score << endl;
+            int movieId = p.first;
+            double score = p.second;
+            Movie movie = movies[movieId - 1];
+            cout << movie.title << " (" << movie.genre << "), score: " << score << endl;
         }
-        cout << endl;
     }
 
     return 0;

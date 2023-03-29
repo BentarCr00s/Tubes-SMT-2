@@ -23,25 +23,25 @@ struct Rating
 };
 
 // Fungsi untuk menghitung similarity antar user
-double similarity(unordered_map<int, double> &user1, unordered_map<int, double> &user2)
+double similarity(unordered_map<int, double> *user1, unordered_map<int, double> *user2)
 {
     double dotProduct = 0.0;
     double norm1 = 0.0;
     double norm2 = 0.0;
 
-    for (auto &p1 : user1)
+    for (auto &p1 : *user1)
     {
         int movieId = p1.first;
         double rating1 = p1.second;
-        if (user2.count(movieId))
+        if (user2->count(movieId))
         {
-            double rating2 = user2[movieId];
+            double rating2 = (*user2)[movieId];
             dotProduct += rating1 * rating2;
         }
         norm1 += rating1 * rating1;
     }
 
-    for (auto &p2 : user2)
+    for (auto &p2 : *user2)
     {
         double rating2 = p2.second;
         norm2 += rating2 * rating2;
@@ -58,18 +58,18 @@ double similarity(unordered_map<int, double> &user1, unordered_map<int, double> 
 }
 
 // Fungsi untuk merekomendasikan film berdasarkan rating dari user-user yang memiliki similarity yang tinggi
-vector<pair<int, double>> recommendMovies(int userId, unordered_map<int, unordered_map<int, double>> &userRatings, vector<Rating> &allRatings, int numRecs)
+vector<pair<int, double>> recommendMovies(int userId, unordered_map<int, unordered_map<int, double>> *userRatings, vector<Rating> *allRatings, int numRecs)
 {
-    unordered_map<int, double> user1 = userRatings[userId];
+    unordered_map<int, double> *user1 = &((*userRatings)[userId]);
 
     // Menghitung similarity antar user
     vector<pair<int, double>> similarities;
-    for (auto &p2 : userRatings)
+    for (auto &p2 : *userRatings)
     {
         int userId2 = p2.first;
         if (userId2 != userId)
         {
-            double sim = similarity(user1, p2.second);
+            double sim = similarity(user1, &p2.second);
             similarities.push_back({userId2, sim});
         }
     }
@@ -84,12 +84,12 @@ vector<pair<int, double>> recommendMovies(int userId, unordered_map<int, unorder
     {
         int userId2 = p.first;
         double sim = p.second;
-        unordered_map<int, double> user2 = userRatings[userId2];
-        for (auto &p2 : user2)
+        unordered_map<int, double> *user2 = &((*userRatings)[userId2]);
+        for (auto &p2 : *user2)
         {
             int movieId = p2.first;
             double rating = p2.second;
-            if (!user1.count(movieId))
+            if (!user1->count(movieId))
             {
                 if (!movieScores.count(movieId))
                 {
@@ -156,7 +156,7 @@ int main()
     // Merekomendasikan film untuk setiap user
     for (int userId = 1; userId <= 10; ++userId)
     {
-        vector<pair<int, double>> recommendations = recommendMovies(userId, userRatings, ratings, 5);
+        vector<pair<int, double>> recommendations = recommendMovies(userId, &userRatings, &ratings, 5);
         cout << "Recommended movies for user " << userId << ":" << endl;
         for (auto &rec : recommendations)
         {
